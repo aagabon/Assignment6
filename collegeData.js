@@ -14,6 +14,7 @@ const Sequelize = require('sequelize');
 const sequelize = new Sequelize('AlexaDB', 'AlexaDB_owner', 'ENtLMOTF2r9V', {
     host: 'ep-fancy-hill-a53p3ewa.us-east-2.aws.neon.tech',
     dialect: 'postgres', 
+    dialectModule: require('pg'), 
     port: 5432,
     dialectOptions: {
         ssl: { rejectUnauthorized: false }
