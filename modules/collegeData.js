@@ -1,202 +1,246 @@
 /*********************************************************************************
-* WEB700 – Assignment 4
+* WEB700 – Assignment 6
 * I declare that this assignment is my own work in accordance with Seneca Academic Policy.
 * No part of this assignment has been copied manually or electronically from any other source
 * (including web sites) or distributed to other students.
 *
-* Name: Alexa Agabon Student ID: 151904232 Date: July 6, 2024
+* Name: Alexa Agabon Student ID: 151904232 Date: August 10, 2024
 *
 ********************************************************************************/
 
+const Sequelize = require('sequelize');
 
-// Import the file system module
-const fs = require('fs'); // Imports the 'fs' module for file system operations
-const path = require("path");
-const dataPath = path.join(__dirname, '../data/students.json');
+// Create a new Sequelize instance with your DB credentials
+const sequelize = new Sequelize('AlexaDB', 'AlexaDB_owner', 'ENtLMOTF2r9V', {
+    host: 'ep-fancy-hill-a53p3ewa.us-east-2.aws.neon.tech',
+    dialect: 'postgres', 
+    port: 5432,
+    dialectOptions: {
+        ssl: { rejectUnauthorized: false }
+    },
+    query: { raw: true }
+});
 
-// Define a class to hold the students and the courses data
-class Data { // Defining a class called 'Data' to hold the students and the courses data
-    constructor(students, courses) { // Constructor function to initialize students and courses
-        this.students = students; // Assigning the 'students' parameter to the 'students' property of the class instance
-        this.courses = courses; // Assigning the 'courses' parameter to the 'courses' property of the class instance
+// Define the Student model
+const Student = sequelize.define('Student', {
+    studentNum: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    firstName: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+    lastName: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+    email: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+    addressStreet: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+    addressCity: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+    addressProvince: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+    TA: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+    },
+    status: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+    courseId: { // Ensure courseId is defined in Student model
+        type: Sequelize.INTEGER,
+        references: {
+            model: 'Courses',
+            key: 'courseId'
+        },
+        allowNull: false
     }
-}
+});
 
-// Initialize dataCollection variable to hold the students and the courses data
-let dataCollection = {
-    students: [], // This array will hold all student objects
-    courses: [] // Other data collections as needed
+// Define the Course model
+const Course = sequelize.define('Course', {
+    courseId: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    courseCode: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    },
+    courseDescription: {
+        type: Sequelize.STRING,
+        allowNull: false,
+    }
+});
+
+// Establish relationship: A Course has many Students
+Course.hasMany(Student, { foreignKey: 'courseId' });
+Student.belongsTo(Course, { foreignKey: 'courseId' });
+
+// Initialize the database and sync models
+module.exports.initialize = function () {
+    return sequelize.sync()
+        .then(() => Promise.resolve())
+        .catch((err) => Promise.reject("unable to sync the database: " + err));
 };
 
-// Function to initialize the data by reading files
-function initialize() { // Defining a function named 'initialize' to read data from files
-    return new Promise((resolve, reject) => { // Returning a Promise for asynchronous operations
-        // Read students.json file
-        fs.readFile('./data/students.json', 'utf8', (err, studentDataFromFile) => { // Reading 'students.json' file asynchronously
-            if (err) { // Handling any errors that occur during file read
-                reject("Unable to read courses.json"); // Rejecting the Promise with an error message
-                return; // Exiting the function
+// Get all students
+module.exports.getAllStudents = function () {
+    return Student.findAll()
+        .then((students) => Promise.resolve(students))
+        .catch((err) => Promise.reject("no results returned: " + err));
+};
+
+// Get students by course ID
+module.exports.getStudentsByCourse = function (courseId) {
+    return Student.findAll({ where: { courseId: courseId } })
+        .then((students) => {
+            if (students.length > 0) {
+                return Promise.resolve(students);
+            } else {
+                return Promise.reject("no results returned");
             }
+        })
+        .catch((err) => Promise.reject("no results returned: " + err));
+};
 
-            fs.readFile('./data/courses.json', 'utf8', (err, courseDataFromFile) => {
-                if (err) {
-                    reject("Unable to read courses.json");
-                    return;
-                }
-
-                // Parse student and course data from files
-                const students = JSON.parse(studentDataFromFile); // Parsing JSON data from 'students.json' file
-                const courses = JSON.parse(courseDataFromFile); // Parsing JSON data from 'courses.json' file
-
-                // Create a Data object with parsed data
-                dataCollection = new Data(students, courses); // Creating a new 'Data' instance with parsed data
-                resolve(); // Resolving the Promise indicating successful initialization
-            });
-        });
-    });
-}
-
-// Function to get all students
-function getAllStudents() { // Defining a function named 'getAllStudents' to get all students data
-    return new Promise((resolve, reject) => { // Returning a Promise for asynchronous operations
-        // Checking if dataCollection is empty or invalid
-        if (!dataCollection || !dataCollection.students || dataCollection.students.length === 0) { // Checking if dataCollection is empty or invalid
-            reject("No students found"); // Rejecting the Promise with an error message
-            return; // Exiting the function
-        }
-
-        // Resolve with students data
-        resolve(dataCollection.students); // Resolving the Promise with students data
-    });
-}
-
-// Function to get all courses
-function getCourses() { // Defining a function named 'getCourses' to get all courses data
-    return new Promise((resolve, reject) => { // Returning a Promise for asynchronous operations
-        // Check if dataCollection is empty or invalid
-        if (!dataCollection || !dataCollection.courses || dataCollection.courses.length === 0) { // Checking if dataCollection is empty or invalid
-            reject("No courses found"); // Rejecting the Promise with an error message
-            return; // Exiting the function
-        }
-        // Resolve with courses data
-        resolve(dataCollection.courses); // Resolving the Promise with courses data
-    });
-}
-
-// Function to get course by courseId
-function getCourseById(id) {
-    return new Promise((resolve, reject) => {
-        const courseIdNumber = Number(id);
-        const course = dataCollection.courses.find(c => c.courseId === courseIdNumber);
-        if (course) {
-            resolve(course);
-        } else {
-            reject("query returned 0 results");
-        }
-    });
-}
-
-
-// Function to get students by course
-function getStudentsByCourse(course) { // Defining a function named 'getStudentsByCourse' to get students by their course
-    return new Promise((resolve, reject) => {
-        // Check if dataCollection or students array is empty or invalid
-        if (!dataCollection || !dataCollection.students || dataCollection.students.length === 0) {
-            reject("No students found"); // Reject the Promise with an error message
-            return; // Exit the function
-        }
-
-        // Filter students by course
-        const studentsByCourse = dataCollection.students.filter(student => student.course === course);
-
-        if (studentsByCourse.length === 0) {
-            reject("No students found for the specified course"); // Reject if no students found for the course
-        } else {
-            resolve(studentsByCourse); // Resolve with students matching the course
-        }
-    });
-}
-
-// Function to get student by studentNum
-function getStudentByNum(num) {
-    return new Promise(function (resolve, reject) {
-        var foundStudent = null;
-
-        for (let i = 0; i < dataCollection.students.length; i++) {
-            if (dataCollection.students[i].studentNum == num) {
-                foundStudent = dataCollection.students[i];
+// Get student by number
+module.exports.getStudentByNum = function (num) {
+    return Student.findAll({ where: { studentNum: num } })
+        .then((students) => {
+            if (students.length > 0) {
+                return Promise.resolve(students[0]);
+            } else {
+                return Promise.reject("no results returned");
             }
-        }
-
-        if (!foundStudent) {
-            reject("query returned 0 results"); return;
-        }
-
-        resolve(foundStudent);
-    });
+        })
+        .catch((err) => Promise.reject("no results returned: " + err));
 };
 
-// Function to update a student
-function updateStudent(studentData) {
-    return new Promise((resolve, reject) => {
-        const studentIndex = dataCollection.students.findIndex(student => student.studentNum == studentData.studentNum);
-        if (studentIndex !== -1) {
-            dataCollection.students[studentIndex] = {
-                ...dataCollection.students[studentIndex],
-                firstName: studentData.firstName,
-                lastName: studentData.lastName,
-                email: studentData.email,
-                addressStreet: studentData.addressStreet,
-                addressCity: studentData.addressCity,
-                addressProvince: studentData.addressProvince,
-                TA: studentData.TA === 'on',
-                status: studentData.status,
-                course: studentData.course
-            };
-            fs.writeFile(dataPath, JSON.stringify(dataCollection.students, null, 2), (err) => {
-                if (err) {
-                    reject("Unable to save student data");
-                } else {
-                    resolve();
-                }
-            });
-        } else {
-            reject("Student not found");
-        }
-        resolve();
-    });
+// Get all courses
+module.exports.getCourses = function () {
+    return Course.findAll()
+        .then((courses) => Promise.resolve(courses))
+        .catch((err) => Promise.reject("no results returned: " + err));
 };
 
-// Function to add a new student
-function addStudent(studentData) {
-    return new Promise((resolve, reject) => {
-        // Normalize TA field
-        if (studentData.TA === undefined) {
-            studentData.TA = false;
-        } else {
-            studentData.TA = true;
+// Get course by ID
+module.exports.getCourseById = function (id) {
+    return Course.findAll({ where: { courseId: id } }) 
+        .then((courses) => {
+            if (courses.length > 0) {
+                return Promise.resolve(courses[0]);
+            } else {
+                return Promise.reject("no results returned");
+            }
+        })
+        .catch((err) => Promise.reject("no results returned: " + err));
+};
+
+// Add a student
+module.exports.addStudent = function (studentData) {
+    studentData.TA = (studentData.TA === 'true'); // Ensure TA is true/false
+
+    for (let key in studentData) {
+        if (studentData[key] === "") {
+            studentData[key] = null;
         }
+    }
 
-        // Assign student number
-        studentData.studentNum = dataCollection.students.length + 261;
+    return Student.create(studentData)
+        .then(() => Promise.resolve())
+        .catch((err) => Promise.reject("unable to create student: " + err));
+};
 
-        // Push studentData to students array
-        dataCollection.students.push(studentData);
+// Update a student
+module.exports.updateStudent = function (studentData) {
+    studentData.TA = (studentData.TA === 'true'); // Ensure TA is true/false
 
-        // Resolve the promise
-        resolve();
-    });
-}
+    for (let key in studentData) {
+        if (studentData[key] === "") {
+            studentData[key] = null;
+        }
+    }
 
+    return Student.update(studentData, { where: { studentNum: studentData.studentNum } })
+        .then((result) => {
+            if (result[0] > 0) {
+                return Promise.resolve();
+            } else {
+                return Promise.reject("no results returned");
+            }
+        })
+        .catch((err) => Promise.reject("unable to update student: " + err));
+};
 
-// Export functions to be used by other modules
-module.exports = { // Exporting functions to be used by other modules
-    initialize, // Exporting 'initialize' function
-    getAllStudents, // Exporting 'getAllStudents' function
-    getCourses, // Exporting 'getCourses' function
-    getStudentsByCourse, // Exporting 'getStudentsByCourse' function
-    getStudentByNum, // Exporting 'getStudentByNum' function
-    addStudent,
-    getCourseById,
-    updateStudent
+// Add a course
+module.exports.addCourse = function (courseData) {
+    for (let key in courseData) {
+        if (courseData[key] === "") {
+            courseData[key] = null;
+        }
+    }
+
+    return Course.create(courseData)
+        .then(() => Promise.resolve())
+        .catch((err) => Promise.reject("unable to create course: " + err));
+};
+
+// Update a course
+module.exports.updateCourse = function (courseData) {
+    for (let key in courseData) {
+        if (courseData[key] === "") {
+            courseData[key] = null;
+        }
+    }
+
+    return Course.update(courseData, { where: { courseId: courseData.courseId } })
+        .then((result) => {
+            if (result[0] > 0) {
+                return Promise.resolve();
+            } else {
+                return Promise.reject("no results returned");
+            }
+        })
+        .catch((err) => Promise.reject("unable to update course: " + err));
+};
+
+// Delete a course by ID
+module.exports.deleteCourseById = function (id) {
+    return Course.destroy({ where: { courseId: id } })
+        .then((result) => {
+            if (result > 0) {
+                return Promise.resolve();
+            } else {
+                return Promise.reject("course not found");
+            }
+        })
+        .catch((err) => Promise.reject("unable to delete course: " + err));
+};
+
+// Delete a student by number
+module.exports.deleteStudentByNum = function (studentNum) {
+    return Student.destroy({ where: { studentNum: studentNum } })
+        .then((result) => {
+            if (result > 0) {
+                return Promise.resolve();
+            } else {
+                return Promise.reject("student not found");
+            }
+        })
+        .catch((err) => Promise.reject("unable to delete student: " + err));
 };
