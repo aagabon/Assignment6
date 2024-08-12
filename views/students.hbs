@@ -1,0 +1,46 @@
+<div class="row">
+    <div class="col-md-12">
+        <br>
+        <h2>Students</h2>
+        <hr />
+        
+        <a href="/students/add" class="btn btn-primary mb-3">Add New Student</a>
+
+        {{#if students.length}}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Student Num</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Address</th>
+                            <th>Status</th>
+                            <th>Course ID</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each students}}
+                            <tr>
+                                <td>{{studentNum}}</td>
+                                <td><a href="/student/{{studentNum}}">{{firstName}} {{lastName}}</a></td>
+                                <td><a href="mailto:{{email}}">{{email}}</a></td>
+                                <td>{{addressStreet}} {{addressCity}} {{addressProvince}}</td>
+                                <td>{{status}}</td>
+                                <td><a href="/students?course={{courseId}}">{{course}}</a></td>
+                                <td>
+                                    <a href="/student/delete/{{studentNum}}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this student?')">Remove</a>
+                                </td>
+                            </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        {{else}}
+            <div class="col-md-12 text-center">
+                <strong>{{message}}</strong>
+            </div>
+        {{/if}}
+    </div>
+</div>

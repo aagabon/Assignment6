@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student</title>
+    <meta charset="UTF-8" />
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <!-- Custom Theme CSS -->
+    <link rel="stylesheet" type="text/css" href="/css/theme.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Alexa Agabon</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                {{#navLink "/"}}
+                    Home
+                {{/navLink}}
+                {{#navLink "/about"}}
+                    About
+                {{/navLink}}
+                {{#navLink "/htmlDemo"}}
+                    HTML Demo
+                {{/navLink}}
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                {{#navLink "/students"}}
+                    Students
+                {{/navLink}}
+                {{#navLink "/courses"}}
+                    Courses
+                {{/navLink}}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2>{{#if viewData.student}}Edit Student{{else}}Add New Student{{/if}}</h2>
+
+        {{#if viewData.student}}
+            <form method="POST" action="/student/update">
+                <!-- Student Details -->
+                <fieldset>
+                    <legend>Student Information</legend>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>First Name:</label>
+                                <input class="form-control" name="firstName" type="text" value="{{viewData.student.firstName}}" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Last Name:</label>
+                                <input class="form-control" name="lastName" type="text" value="{{viewData.student.lastName}}" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Email:</label>
+                                <input class="form-control" name="email" type="email" value="{{viewData.student.email}}" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Address (Street):</label>
+                                <input class="form-control" name="addressStreet" type="text" value="{{viewData.student.addressStreet}}" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Address (City):</label>
+                                <input class="form-control" name="addressCity" type="text" value="{{viewData.student.addressCity}}" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Address (Province):</label>
+                                <input class="form-control" name="addressProvince" type="text" value="{{viewData.student.addressProvince}}" />
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Academic Information</legend>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label>College Employment:</label><br />
+                            <div class="form-check">
+                                <input class="form-check-input" name="collegeEmployment" type="checkbox" id="TA" value="TA" {{#if viewData.student.collegeEmployment}}checked{{/if}}>
+                                <label class="form-check-label" for="TA">
+                                    Teaching Assistant
+                                </label>
+                            </div>
+                            <br />
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Enrollment Status:</label><br />
+                                <label class="checkbox-inline">
+                                    <input name="enrollmentStatus" type="radio" value="Full Time" {{#if (equals viewData.student.enrollmentStatus "Full Time")}}checked{{/if}} /> Full Time
+                                </label>
+                                <label class="checkbox-inline">
+                                    <input name="enrollmentStatus" type="radio" value="Part Time" {{#if (equals viewData.student.enrollmentStatus "Part Time")}}checked{{/if}} /> Part Time
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="course">Enrolled in Course:</label>
+                                {{#if viewData.courses}}
+                                <select class="form-select" name="course" id="course">
+                                    <option value="">Select Course</option>
+                                    {{#each viewData.courses}}
+                                    <option value="{{courseId}}" {{#if selected}}selected{{/if}}>{{courseCode}}</option>
+                                    {{/each}}
+                                </select>
+                                {{else}}
+                                <div>No Courses</div>
+                                {{/if}}
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+                <hr />
+                <input type="hidden" name="studentId" value="{{viewData.student.studentId}}" />
+                <input type="submit" class="btn btn-primary float-right" value="Update Student" />
+            </form>
+        {{else}}
+            <p>No student data available.</p>
+        {{/if}}
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>
